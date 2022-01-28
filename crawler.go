@@ -78,7 +78,7 @@ func (c crawler) crawl() ([]string, error) {
 }
 
 func (c crawler) downloadFilePath(prefix string) string {
-	return filepath.Join(c.output, fmt.Sprintf("membros-ativos-%s-%s-%s.csv", prefix, c.month, c.year))
+	return filepath.Join(c.output, fmt.Sprintf("membros-ativos-%s-%s-%s.xls", prefix, c.month, c.year))
 }
 
 func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
@@ -138,7 +138,7 @@ func (c crawler) exportaPlanilha(ctx context.Context, fName string) error {
 		chromedp.Click(`//*[@id="sc_btgp_btn_group_1_top"]`, chromedp.BySearch, chromedp.NodeVisible),
 		chromedp.Sleep(c.timeBetweenSteps),
 		
-		chromedp.Click(`//*[@id="csv_top"]`, chromedp.BySearch, chromedp.NodeVisible),
+		chromedp.Click(`//*[@id="xls_top"]`, chromedp.BySearch, chromedp.NodeVisible),
 		chromedp.Sleep(c.timeBetweenSteps),
 		
 		chromedp.Click(`//*[@id="idBtnDown"]`, chromedp.BySearch, chromedp.NodeVisible),
