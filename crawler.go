@@ -12,7 +12,6 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-
 type crawler struct {
 	collectionTimeout time.Duration
 	timeBetweenSteps  time.Duration
@@ -59,7 +58,7 @@ func (c crawler) crawl() ([]string, error) {
 		log.Fatalf("Erro fazendo download do contracheque: %v", err)
 	}
 	log.Printf("Download realizado com sucesso!\n")
-	
+
 	// Indenizações
 	log.Printf("Realizando seleção (%s/%s)...", c.month, c.year)
 	if err := c.abreCaixaDialogo(ctx, "inde"); err != nil {
@@ -84,25 +83,25 @@ func (c crawler) downloadFilePath(prefix string) string {
 func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 	var baseURL string
 	selectYear := `//*[@id="SC_data"]`
-	if tipo == "contra"{
+	if tipo == "contra" {
 		baseURL = "https://transparencia.mpam.mp.br/grid_VW_TRANSPARENCIA_GERAL/"
 
 		return chromedp.Run(ctx,
 			chromedp.Navigate(baseURL),
 			chromedp.Sleep(c.timeBetweenSteps),
-	
+
 			// Seleciona ano
 			chromedp.SetValue(selectYear, fmt.Sprintf("%s/%s##@@%s/%s", c.month, c.year, c.month, c.year), chromedp.BySearch),
 			chromedp.Sleep(c.timeBetweenSteps),
-			
+
 			// Seleciona mes
 			chromedp.SetValue(`//*[@id="SC_classificacao"]`, "MEMBROS ATIVOS##@@MEMBROS ATIVOS", chromedp.BySearch, chromedp.NodeVisible),
 			chromedp.Sleep(c.timeBetweenSteps),
-	
+
 			// Busca
 			chromedp.Click(`//*[@id="sc_b_pesq_bot"]`, chromedp.BySearch, chromedp.NodeVisible),
 			chromedp.Sleep(c.timeBetweenSteps),
-			
+
 			// Altera o diretório de download
 			browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllowAndName).
 				WithDownloadPath(c.output).
@@ -110,7 +109,7 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 		)
 	} else {
 		baseURL = "https://transparencia.mpam.mp.br/grid_TRANSPARENCIA_INDENIZACAO/"
-		
+
 		return chromedp.Run(ctx,
 			chromedp.Navigate(baseURL),
 			chromedp.Sleep(c.timeBetweenSteps),
@@ -118,7 +117,7 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 			// Seleciona ano
 			chromedp.SetValue(selectYear, fmt.Sprintf("%s/%s##@@%s/%s", c.month, c.year, c.month, c.year), chromedp.BySearch),
 			chromedp.Sleep(c.timeBetweenSteps),
-	
+
 			// Busca
 			chromedp.Click(`//*[@id="sc_b_pesq_bot"]`, chromedp.BySearch, chromedp.NodeVisible),
 			chromedp.Sleep(c.timeBetweenSteps),
@@ -133,18 +132,25 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 
 // exportaPlanilha clica no botão correto para exportar para excel, espera um tempo para download renomeia o arquivo.
 func (c crawler) exportaPlanilha(ctx context.Context, fName string) error {
-	chromedp.Run(ctx,
-		// Clica no botão de download 
+	tctx, tcancel := context.WithTimeout(ctx, 30*time.Second)
+	defer tcancel()
+	if err := chromedp.Run(tctx,
+		// Clica no botão de download
 		chromedp.Click(`//*[@id="sc_btgp_btn_group_1_top"]`, chromedp.BySearch, chromedp.NodeVisible),
 		chromedp.Sleep(c.timeBetweenSteps),
-		
+	); err != nil {
+		return fmt.Errorf("planilha não disponível: %v", err)
+	}
+	if err := chromedp.Run(ctx,
 		chromedp.Click(`//*[@id="xls_top"]`, chromedp.BySearch, chromedp.NodeVisible),
 		chromedp.Sleep(c.timeBetweenSteps),
-		
+
 		chromedp.Click(`//*[@id="idBtnDown"]`, chromedp.BySearch, chromedp.NodeVisible),
 		chromedp.Sleep(c.timeBetweenSteps),
-	)
-	
+	); err != nil {
+		return fmt.Errorf("falha no download: %v", err)
+	}
+
 	if err := nomeiaDownload(c.output, fName); err != nil {
 		return fmt.Errorf("erro renomeando arquivo (%s): %v", fName, err)
 	}
