@@ -48,7 +48,7 @@ func (c crawler) crawl() ([]string, error) {
 
 	// Contracheque
 	log.Printf("Realizando seleção (%s/%s)...", c.month, c.year)
-	if err := c.abreCaixaDialogo(ctx, "contra"); err != nil {
+	if err := c.abreCaixaDialogo(ctx, "contracheque"); err != nil {
 		log.Fatalf("Erro no setup:%v", err)
 	}
 	log.Printf("Seleção realizada com sucesso!\n")
@@ -61,7 +61,7 @@ func (c crawler) crawl() ([]string, error) {
 
 	// Indenizações
 	log.Printf("Realizando seleção (%s/%s)...", c.month, c.year)
-	if err := c.abreCaixaDialogo(ctx, "inde"); err != nil {
+	if err := c.abreCaixaDialogo(ctx, "indenizatorias"); err != nil {
 		log.Fatalf("Erro no setup:%v", err)
 	}
 	log.Printf("Seleção realizada com sucesso!\n")
@@ -83,10 +83,10 @@ func (c crawler) downloadFilePath(prefix string) string {
 func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 	var baseURL string
 	selectYear := `//*[@id="SC_data"]`
-	if tipo == "contra" {
+	if tipo == "contracheque" {
 		baseURL = "https://transparencia.mpam.mp.br/grid_VW_TRANSPARENCIA_GERAL/"
 
-		return chromedp.Run(ctx,
+		if err := chromedp.Run(ctx,
 			chromedp.Navigate(baseURL),
 			chromedp.Sleep(c.timeBetweenSteps),
 
@@ -106,11 +106,13 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 			browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllowAndName).
 				WithDownloadPath(c.output).
 				WithEventsEnabled(true),
-		)
+		); err != nil {
+			return fmt.Errorf("planilha de %s não disponível: %v", tipo, err)
+		}
 	} else {
 		baseURL = "https://transparencia.mpam.mp.br/grid_TRANSPARENCIA_INDENIZACAO/"
 
-		return chromedp.Run(ctx,
+		if err := chromedp.Run(ctx,
 			chromedp.Navigate(baseURL),
 			chromedp.Sleep(c.timeBetweenSteps),
 
@@ -126,8 +128,11 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 			browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllowAndName).
 				WithDownloadPath(c.output).
 				WithEventsEnabled(true),
-		)
+		); err != nil {
+			return fmt.Errorf("planilha de %s não disponível: %v", tipo, err)
+		}
 	}
+	return nil
 }
 
 // exportaPlanilha clica no botão correto para exportar para excel, espera um tempo para download renomeia o arquivo.
