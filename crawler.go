@@ -49,7 +49,8 @@ func (c crawler) crawl() ([]string, error) {
 	// Contracheque
 	log.Printf("Realizando seleção (%s/%s)...", c.month, c.year)
 	if err := c.abreCaixaDialogo(ctx, "contracheque"); err != nil {
-		log.Fatalf("Erro no setup:%v", err)
+		log.Printf("Erro no setup:%v", err)
+		os.Exit(4)
 	}
 	log.Printf("Seleção realizada com sucesso!\n")
 	cqFname := c.downloadFilePath("contracheque")
@@ -144,6 +145,7 @@ func (c crawler) exportaPlanilha(ctx context.Context, fName string) error {
 		chromedp.Click(`//*[@id="sc_btgp_btn_group_1_top"]`, chromedp.BySearch, chromedp.NodeVisible),
 		chromedp.Sleep(c.timeBetweenSteps),
 	); err != nil {
+		defer os.Exit(4)
 		return fmt.Errorf("planilha não disponível: %v", err)
 	}
 	if err := chromedp.Run(ctx,
