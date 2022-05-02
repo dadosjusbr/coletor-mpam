@@ -24,10 +24,16 @@ const (
 	STATUS_DATA_UNAVAILABLE = 4
 )
 
-type dataUnavailableErr string
+type dataUnavailableErr struct {
+	err string
+}
 
-func (msg dataUnavailableErr) Error() (int, error) {
-	return fmt.Printf("Dados indisponível: %s", msg)
+func (msg dataUnavailableErr) Error() string {
+	return msg.err
+}
+
+func dataError(msg string) error {
+	return &dataUnavailableErr{msg}
 }
 
 func (c crawler) crawl() ([]string, error) {
@@ -59,8 +65,7 @@ func (c crawler) crawl() ([]string, error) {
 	// Contracheque
 	log.Printf("Realizando seleção (%s/%s)...", c.month, c.year)
 	if err := c.abreCaixaDialogo(ctx, "contracheque"); err != nil {
-		dataUnavailableErr("planilha de contracheque\n").Error()
-		os.Exit(STATUS_DATA_UNAVAILABLE)
+		return nil, dataError(fmt.Sprintf("planilha de contracheque inexistente: %v", err))
 	}
 	log.Printf("Seleção realizada com sucesso!\n")
 	cqFname := c.downloadFilePath("contracheque")
@@ -73,8 +78,7 @@ func (c crawler) crawl() ([]string, error) {
 	// Indenizações
 	log.Printf("Realizando seleção (%s/%s)...", c.month, c.year)
 	if err := c.abreCaixaDialogo(ctx, "indenizatorias"); err != nil {
-		dataUnavailableErr("planilha de indenizatorias\n").Error()
-		os.Exit(STATUS_DATA_UNAVAILABLE)
+		return nil, dataError(fmt.Sprintf("planilha de verbas indenizatorias inexistente: %v", err))
 	}
 	log.Printf("Seleção realizada com sucesso!\n")
 	iFname := c.downloadFilePath("indenizatorias")
@@ -119,8 +123,7 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 				WithDownloadPath(c.output).
 				WithEventsEnabled(true),
 		); err != nil {
-			dataUnavailableErr("planilha de contracheque\n").Error()
-			os.Exit(STATUS_DATA_UNAVAILABLE)
+			return dataUnavailableErr{"abrindo caixa da planilha de contracheque"}
 		}
 	} else {
 		baseURL = "https://transparencia.mpam.mp.br/grid_TRANSPARENCIA_INDENIZACAO/"
@@ -142,8 +145,7 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 				WithDownloadPath(c.output).
 				WithEventsEnabled(true),
 		); err != nil {
-			dataUnavailableErr("planilha de indenizatorias\n").Error()
-			os.Exit(STATUS_DATA_UNAVAILABLE)
+			return dataUnavailableErr{"abrindo caixa da planilha de verbas indenizatorias"}
 		}
 	}
 	return nil
@@ -158,8 +160,7 @@ func (c crawler) exportaPlanilha(ctx context.Context, fName string) error {
 		chromedp.Click(`//*[@id="sc_btgp_btn_group_1_top"]`, chromedp.BySearch, chromedp.NodeVisible),
 		chromedp.Sleep(c.timeBetweenSteps),
 	); err != nil {
-		dataUnavailableErr("botão de download\n").Error()
-		os.Exit(STATUS_DATA_UNAVAILABLE)
+		return dataUnavailableErr{"exportando as planilhas"}
 	}
 	if err := chromedp.Run(ctx,
 		chromedp.Click(`//*[@id="xls_top"]`, chromedp.BySearch, chromedp.NodeVisible),
