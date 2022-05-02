@@ -123,7 +123,7 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 				WithDownloadPath(c.output).
 				WithEventsEnabled(true),
 		); err != nil {
-			return dataUnavailableErr{"abrindo caixa da planilha de contracheque"}
+			return dataError("abrindo caixa da planilha de contracheque")
 		}
 	} else {
 		baseURL = "https://transparencia.mpam.mp.br/grid_TRANSPARENCIA_INDENIZACAO/"
@@ -145,7 +145,7 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 				WithDownloadPath(c.output).
 				WithEventsEnabled(true),
 		); err != nil {
-			return dataUnavailableErr{"abrindo caixa da planilha de verbas indenizatorias"}
+			return dataError("abrindo caixa da planilha de verbas indenizatorias")
 		}
 	}
 	return nil
@@ -160,7 +160,7 @@ func (c crawler) exportaPlanilha(ctx context.Context, fName string) error {
 		chromedp.Click(`//*[@id="sc_btgp_btn_group_1_top"]`, chromedp.BySearch, chromedp.NodeVisible),
 		chromedp.Sleep(c.timeBetweenSteps),
 	); err != nil {
-		return dataUnavailableErr{"exportando as planilhas"}
+		return dataError("exportando as planilhas")
 	}
 	if err := chromedp.Run(ctx,
 		chromedp.Click(`//*[@id="xls_top"]`, chromedp.BySearch, chromedp.NodeVisible),
