@@ -62,7 +62,7 @@ func main() {
 	if err != nil {
 		duerr, ok := err.(*dataUnavailableErr)
 		if ok {
-			log.Printf("Erro: %s", duerr)
+			fmt.Fprintf(os.Stderr, "Erro: %s\n", duerr)
 			os.Exit(4)
 		}
 		log.Fatalf("Error crawling (%s, %s, %s): %v", year, month, outputFolder, err)
