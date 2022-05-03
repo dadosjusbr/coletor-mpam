@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	defaultGeneralTimeout      = 5 * time.Minute  // Duração máxima total da coleta de todos os arquivos. Valor padrão calculado a partir de uma média de execuções ~4.5min
-	defaulTimeBetweenSteps     = 4 * time.Second //Tempo de espera entre passos do coletor."
+	defaultGeneralTimeout  = 5 * time.Minute // Duração máxima total da coleta de todos os arquivos. Valor padrão calculado a partir de uma média de execuções ~4.5min
+	defaulTimeBetweenSteps = 4 * time.Second //Tempo de espera entre passos do coletor."
 )
 
 func main() {
@@ -60,6 +60,11 @@ func main() {
 	}
 	downloads, err := c.crawl()
 	if err != nil {
+		duerr, ok := err.(*dataUnavailableErr)
+		if ok {
+			fmt.Fprintf(os.Stderr, "Erro: %s\n", duerr)
+			os.Exit(4)
+		}
 		log.Fatalf("Error crawling (%s, %s, %s): %v", year, month, outputFolder, err)
 	}
 
