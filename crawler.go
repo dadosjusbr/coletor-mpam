@@ -86,7 +86,7 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 	var baseURL string
 	selectYear := `//*[@id="SC_data"]`
 	if tipo == "contracheque" {
-		baseURL = "https://transparencia.mpam.mp.br/grid_VW_TRANSPARENCIA_GERAL/"
+		baseURL = "https://contrachequetransparencia.mpam.mp.br/grid_VW_TRANSPARENCIA_GERAL/"
 
 		if err := chromedp.Run(ctx,
 			chromedp.Navigate(baseURL),
@@ -117,7 +117,7 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 			}
 		}
 	} else {
-		baseURL = "https://transparencia.mpam.mp.br/grid_TRANSPARENCIA_INDENIZACAO/"
+		baseURL = "https://contrachequetransparencia.mpam.mp.br/grid_TRANSPARENCIA_INDENIZACAO/"
 
 		if err := chromedp.Run(ctx,
 			chromedp.Navigate(baseURL),
