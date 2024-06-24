@@ -111,7 +111,7 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 		); err != nil {
 			// Caso haja erro na coleta, verificamos se este erro é por não haver dados e retornamos status 4.
 			if strings.Contains(err.Error(), "could not set value on node") {
-				return status.NewError(status.DataUnavailable, fmt.Errorf("não há dados disponíveis para %s/%s: %w", c.month, c.year, err))
+				return status.NewError(status.DataUnavailable, fmt.Errorf("não há dados disponíveis de contracheques para %s/%s: %w", c.month, c.year, err))
 			} else {
 				return status.NewError(status.ConnectionError, fmt.Errorf("erro abrindo caixa da planilha de contracheque: %w", err))
 			}
@@ -136,7 +136,12 @@ func (c crawler) abreCaixaDialogo(ctx context.Context, tipo string) error {
 				WithDownloadPath(c.output).
 				WithEventsEnabled(true),
 		); err != nil {
-			return status.NewError(status.ConnectionError, fmt.Errorf("erro abrindo caixa da planilha de verbas indenizatorias: %w", err))
+			// Caso haja erro na coleta, verificamos se este erro é por não haver dados e retornamos status 4.
+			if strings.Contains(err.Error(), "could not set value on node") {
+				return status.NewError(status.DataUnavailable, fmt.Errorf("não há dados disponíveis de indenizações para %s/%s: %w", c.month, c.year, err))
+			} else {
+				return status.NewError(status.ConnectionError, fmt.Errorf("erro abrindo caixa da planilha de verbas indenizatorias: %w", err))
+			}
 		}
 	}
 	return nil
